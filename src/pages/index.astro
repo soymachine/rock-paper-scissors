@@ -1,0 +1,307 @@
+---
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rock Paper Scissors</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet" />
+
+    <style is:global>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        width: 100%; height: 100%;
+        background: #fff;
+        overflow: hidden;
+        font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+        font-weight: 700;
+      }
+
+      /* ── Main layout ──────────────────────────────────── */
+      #game-wrapper {
+        width: 100%; height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+      }
+
+      /* ── Top bar: scores ─────────────────────────────── */
+      #top-bar {
+        flex-shrink: 0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-around;
+        padding: clamp(12px, 3vw, 40px) clamp(16px, 4vw, 70px);
+      }
+
+      .score-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .score-label {
+        font-size: clamp(28px, 6vw, 100px);
+        color: #000;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+
+      .score-value {
+        font-size: clamp(20px, 4vw, 50px);
+        color: #000;
+        line-height: 1;
+      }
+
+      #history-btn {
+        background: none; border: none; cursor: pointer;
+        font-family: inherit; font-weight: 700;
+        font-size: clamp(12px, 1.6vw, 28px);
+        color: #000; letter-spacing: 0.02em;
+        transition: opacity 0.15s;
+        padding: 0;
+        margin-left: auto;
+        align-self: baseline;
+      }
+      #history-btn:hover { opacity: 0.4; }
+
+      /* ── Middle: Phaser canvas ────────────────────────── */
+      #game-area {
+        flex: 1;
+        min-height: 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      #game-container {
+        width: 100%; height: 100%;
+      }
+
+      /* Round result overlay on canvas */
+      #round-result-text {
+        position: absolute;
+        bottom: 12%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: clamp(14px, 3vw, 48px);
+        color: #000;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+      #round-result-text.visible { opacity: 1; }
+
+      /* ── Bottom bar: choice buttons ───────────────────── */
+      #bottom-bar {
+        flex-shrink: 0;
+        padding: 0 clamp(16px, 4vw, 70px) clamp(12px, 2.5vw, 28px);
+      }
+
+      #bottom-top-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: clamp(4px, 1vw, 12px);
+      }
+
+      #choose-label {
+        font-size: clamp(14px, 2.2vw, 50px);
+        color: #000;
+      }
+
+      #choice-buttons {
+        display: flex;
+        gap: clamp(12px, 2.5vw, 50px);
+        align-items: baseline;
+      }
+
+      .choice-btn {
+        background: none; border: none; cursor: pointer;
+        font-family: inherit; font-weight: 700;
+        font-size: clamp(26px, 5.5vw, 105px);
+        color: #000; padding: 0;
+        transition: opacity 0.15s;
+        letter-spacing: -0.01em;
+      }
+      .choice-btn:hover { opacity: 0.4; }
+      .choice-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+      #copyright {
+        font-size: clamp(10px, 1vw, 25px);
+        color: #000;
+        margin-top: clamp(4px, 1vw, 10px);
+        opacity: 0.5;
+      }
+
+      /* ── Game over overlay ────────────────────────────── */
+      #game-over-overlay {
+        position: fixed; inset: 0; z-index: 100;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(16px, 4vh, 40px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.45s ease;
+      }
+      #game-over-overlay.visible { opacity: 1; pointer-events: auto; }
+
+      #game-over-title {
+        font-size: clamp(40px, 9vw, 140px);
+        color: #000;
+        letter-spacing: -0.03em;
+      }
+
+      #game-over-score {
+        font-size: clamp(24px, 5vw, 65px);
+        color: #000;
+      }
+
+      #play-again-btn {
+        background: none; border: none; cursor: pointer;
+        font-family: inherit; font-weight: 700;
+        font-size: clamp(28px, 6.5vw, 90px);
+        color: #000; transition: opacity 0.15s;
+        letter-spacing: -0.02em;
+      }
+      #play-again-btn:hover { opacity: 0.4; }
+
+      #game-over-history-btn {
+        background: none; border: none; cursor: pointer;
+        font-family: inherit; font-weight: 700;
+        font-size: clamp(14px, 2.5vw, 40px);
+        color: #000; opacity: 0.5; transition: opacity 0.15s;
+      }
+      #game-over-history-btn:hover { opacity: 1; }
+
+      /* ── History overlay ──────────────────────────────── */
+      #history-overlay {
+        display: none;
+        position: fixed; inset: 0; z-index: 999;
+        background: rgba(255,255,255,0.97);
+        align-items: center; justify-content: center;
+        padding: 24px;
+      }
+      #history-overlay.visible { display: flex; }
+
+      #history-panel {
+        width: 100%; max-width: 680px;
+        max-height: 90vh;
+        display: flex; flex-direction: column;
+      }
+
+      #history-header {
+        display: flex; align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 36px;
+      }
+
+      #history-title { font-size: clamp(32px, 5vw, 60px); color: #000; }
+
+      #history-close {
+        background: none; border: none; cursor: pointer;
+        font-family: inherit; font-weight: 700;
+        font-size: clamp(14px, 2vw, 22px);
+        color: #000; opacity: 0.5; transition: opacity 0.15s; padding: 4px 0;
+      }
+      #history-close:hover { opacity: 1; }
+
+      #history-list { overflow-y: auto; flex: 1; }
+      #history-list::-webkit-scrollbar { width: 4px; }
+      #history-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+      .history-empty { font-size: clamp(16px, 2.5vw, 26px); color: #999; padding: 24px 0; }
+
+      .history-entry {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: baseline;
+        column-gap: 24px;
+        padding: 18px 0;
+        border-bottom: 2px solid #000;
+        color: #000;
+      }
+      .history-entry:first-child { border-top: 2px solid #000; }
+
+      .history-date { font-size: clamp(11px, 1.4vw, 16px); opacity: 0.45; white-space: nowrap; }
+      .history-score { font-size: clamp(22px, 3vw, 40px); letter-spacing: 0.04em; white-space: nowrap; }
+      .history-winner { font-size: clamp(13px, 1.6vw, 20px); white-space: nowrap; }
+      .history-winner.ai-wins { opacity: 0.6; }
+
+      @media (max-width: 600px) {
+        .history-entry { grid-template-columns: 1fr; gap: 6px; padding: 14px 0; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="game-wrapper">
+      <!-- TOP: scores only -->
+      <div id="top-bar">
+        <div class="score-col">
+          <span class="score-label">HUMAN</span>
+          <span class="score-value" id="human-score">0</span>
+        </div>
+        <div class="score-col">
+          <span class="score-label">AI</span>
+          <span class="score-value" id="ai-score">0</span>
+        </div>
+      </div>
+
+      <!-- MIDDLE: Phaser canvas (hands only) -->
+      <div id="game-area">
+        <div id="game-container"></div>
+        <div id="round-result-text"></div>
+      </div>
+
+      <!-- BOTTOM: choice buttons + copyright -->
+      <div id="bottom-bar">
+        <div id="bottom-top-row">
+          <p id="choose-label">CHOOSE ONE↓</p>
+          <button id="history-btn">HISTORY</button>
+        </div>
+        <div id="choice-buttons">
+          <button class="choice-btn" data-choice="rock">ROCK</button>
+          <button class="choice-btn" data-choice="paper">PAPER</button>
+          <button class="choice-btn" data-choice="scissors">SCISSORS</button>
+        </div>
+        <p id="copyright">©soymachine</p>
+      </div>
+    </div>
+
+    <!-- GAME OVER OVERLAY -->
+    <div id="game-over-overlay">
+      <div id="game-over-title"></div>
+      <div id="game-over-score"></div>
+      <button id="play-again-btn">PLAY AGAIN</button>
+      <button id="game-over-history-btn">HISTORY</button>
+    </div>
+
+    <!-- HISTORY OVERLAY -->
+    <div id="history-overlay" role="dialog" aria-modal="true" aria-label="Game History">
+      <div id="history-panel">
+        <div id="history-header">
+          <span id="history-title">HISTORY</span>
+          <button id="history-close">CLOSE ✕</button>
+        </div>
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+    <script>
+      import '../scripts/main.js';
+      import '../scripts/gameUI.js';
+      import { initHistoryPanel } from '../scripts/historyPanel.js';
+      initHistoryPanel();
+    </script>
+  </body>
+</html>
