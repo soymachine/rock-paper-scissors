@@ -54,9 +54,15 @@
       }
 
       .score-value {
-        font-size: clamp(20px, 4vw, 50px);
+        font-size: clamp(36px, 8vw, 120px);
         color: #000;
         line-height: 1;
+      }
+
+      /* AI column: label + score in hand purple */
+      .score-col:last-child .score-label,
+      .score-col:last-child .score-value {
+        color: #967dd7;
       }
 
       #history-btn {
