@@ -16,13 +16,14 @@ export class PreloadScene extends Phaser.Scene {
       barFill.width = 400 * value;
     });
 
-    // Choice hand images (~640×400, also used for idle rock-fist state)
-    this.load.image('human-rock',     '/images/human-rock.png');
-    this.load.image('human-paper',    '/images/human-paper.png');
-    this.load.image('human-scissors', '/images/human-scissors.png');
-    this.load.image('ai-rock',        '/images/ai-rock.png');
-    this.load.image('ai-paper',       '/images/ai-paper.png');
-    this.load.image('ai-scissors',    '/images/ai-scissors.png');
+    // Use BASE_URL so paths work both locally and on GitHub Pages
+    const base = import.meta.env.BASE_URL;
+    this.load.image('human-rock',     `${base}images/human-rock.png`);
+    this.load.image('human-paper',    `${base}images/human-paper.png`);
+    this.load.image('human-scissors', `${base}images/human-scissors.png`);
+    this.load.image('ai-rock',        `${base}images/ai-rock.png`);
+    this.load.image('ai-paper',       `${base}images/ai-paper.png`);
+    this.load.image('ai-scissors',    `${base}images/ai-scissors.png`);
   }
 
   create() {
